@@ -24,8 +24,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -48,53 +51,50 @@ public class BookServiceIpm extends BaseServiceIpm implements BookService {
     private final ModelMapper modelMapper = new ModelMapper();
 
 
-    public Book findByName(String name){
+    public Book findByName(String name) {
         return bookRepository.findByTitle(name);
     }
 
     @Override
-    public BookDto save(BookDto entity) throws ResponseStatusException{
-        try{
-            Optional<Book> exitBook = bookRepository.findBookByTitle(entity.getTitle());
-            if (exitBook.isEmpty()) {
-                Book book = modelMapper.map(entity, Book.class);
-                book.setId(UUID.randomUUID().toString());
-                book.setSlug(SlugGenerator.toSlug(book.getTitle()));
+    public BookDto save(BookDto entity) throws Exception {
+        Optional<Book> exitBook = bookRepository.findBookByTitle(entity.getTitle());
+        if (exitBook.isEmpty()) {
+            Book book = modelMapper.map(entity, Book.class);
+            book.setId(UUID.randomUUID().toString());
+            book.setSlug(SlugGenerator.toSlug(book.getTitle()));
 
 //            add category to book
 
-                Category category = categoryServiceIpm.findByName(entity.getCategory_name());
-                Author author = authorServiceIpm.findByName(entity.getAuthor_name());
-                if (category != null) {
-                    book.setCategory(category);
-                } else {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No category found!");
-                }
-                if (author != null) {
-                    book.setAuthor(author);
-                } else {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"No author found!");
-                }
-
-                try {
-                    if (entity.getFile() != null) {
-                        String filePath = uploader.Upload(entity.getFile());
-                        ImageDto imageDto = new ImageDto();
-                        imageDto.setFile(entity.getFile());
-                        imageDto.setRelation_id(book.getId());
-                        imageServiceIpm.save(imageDto);
-                        log.info("Save book image success!");
-                    }
-                } catch (Exception ex) {
-                    log.info("Can't save uploaded image!");
-                }
-                return this.modelMapper.map(bookRepository.save(book),BookDto.class);
+            Category category = categoryServiceIpm.findByName(entity.getCategory_name());
+            Author author = authorServiceIpm.findByName(entity.getAuthor_name());
+            if (category != null) {
+                book.setCategory(category);
+            } else {
+                log.info("category null!");
+                throw new Exception("No category found!");
             }
-            return null;
-        }catch (Exception exception){
-            log.info(exception.getMessage());
-            return null;
+            if (author != null) {
+                book.setAuthor(author);
+            } else {
+                log.info("author null!");
+                throw new Exception("No author found!");
+            }
+
+            try {
+                if (entity.getFile() != null) {
+                    String filePath = uploader.Upload(entity.getFile());
+                    ImageDto imageDto = new ImageDto();
+                    imageDto.setFile(entity.getFile());
+                    imageDto.setRelation_id(book.getId());
+                    imageServiceIpm.save(imageDto);
+                    log.info("Save book image success!");
+                }
+            } catch (Exception ex) {
+                log.info("Can't save uploaded image!");
+            }
+            return this.modelMapper.map(bookRepository.save(book), BookDto.class);
         }
+        return null;
     }
 
     @Override

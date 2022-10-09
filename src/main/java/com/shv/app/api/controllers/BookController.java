@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.awt.*;
@@ -21,18 +22,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 
-public class BookController extends HandleController<BookDto> implements ICrudController<BookDto,String> {
+public class BookController extends HandleController<BookDto> implements ICrudController<BookDto, String> {
 
     private final BookServiceIpm bookServiceIpm;
 
     @Override
     @PostMapping("/create")
     public ResponseEntity<?> SaveEntity(@ModelAttribute @Valid BookDto id) {
-        BookDto bookDto = bookServiceIpm.save(id);
-        if (bookDto!=null){
-            return this.ResultResponse(bookDto);
-        }else {
-            return this.BadRequest("Something wrong!");
+        try {
+            return this.ResultResponse(bookServiceIpm.save(id));
+        } catch (Exception exception) {
+            log.info(exception.getMessage());
+            return this.BadRequest(exception.getMessage());
         }
     }
 

@@ -5,19 +5,19 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface ICrudService<E, IdType> {
-    E save(E entity);
+    E save(E entity) throws Exception;
 
-    E update(E entity);
+    E update(E entity) throws Exception;
 
-    void removeById(IdType idType);
+    void removeById(IdType idType) throws Exception;
 
-    E remove(E entity);
+    E remove(E entity) throws Exception;
 
-    List<E> findAll();
+    List<E> findAll() throws Exception;
 
-    Page<E> findByPage(int page, int limit);
+    Page<E> findByPage(int page, int limit) throws Exception;
 
-    List<E> findByKeyWord(String keyword);
+    List<E> findByKeyWord(String keyword) throws Exception;
 
-    Page<E> search(String query, int page, int limit);
+    Page<E> search(String query, int page, int limit) throws Exception;
 }
